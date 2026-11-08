@@ -21,24 +21,25 @@ before, personality: it should feel like being let into the owner's room.
 2. **The room, built from blocks.** One room, laid out as in the owner's
    sketch (plan view, door at the bottom):
    - Bed along the top wall, window above it.
-   - Bass in the top-left corner beside the bed.
-   - Guitar in the top-right area above the desk.
+   - Bass hung on the left wall in the top-left corner, beside the head of
+     the bed.
+   - Guitar on a floor stand in the top-right area, beside the desk.
    - Project board along the left wall, about mid-wall.
    - Computer desk and chair along the right wall.
    - Closet at the bottom right beside the door.
    - Door at the bottom. The visitor starts just inside it, facing the room.
 3. **Colours and furniture taken from the owner's photo.**
    - Floor: dark grey carpet.
-   - Left wall white. Right wall pine wood planks (a simple stripe pattern,
-     not a detailed texture).
+   - The back (window) wall is white. The left and right walls are pine wood
+     planks (a simple stripe pattern, not a detailed texture).
    - Bed with a sage-green duvet, two matching pillows and a wooden headboard
      edge.
    - Window above the bed with grey curtains.
-   - White desk against the wood wall, a white wall-mounted shelf unit with
-     cubby holes above it, a dark blue-black office chair, a laptop on the
-     desk.
-   - Small clutter in the photo (food packets, water bottle, cloth, boxes) is
-     deliberately left out.
+   - White desk against the right wall with a monitor and keyboard on it, a
+     white wall-mounted shelf unit with cubby holes above it, a dark
+     blue-black office chair beside the bed end of the desk.
+   - Small clutter in the photos (food, bottles, cloth, boxes, the bag on the
+     bed, the lamp, the red synth) is deliberately left out.
 4. **Project board interaction.** A crosshair shows in the middle of the
    screen. Looking at the board from close enough and pressing **E** opens the
    existing project overlay; **Esc** closes it. While it is open, movement and
@@ -138,9 +139,10 @@ straight ahead above the bed. Plan view (not to scale):
 
 ## Builder's calls added after the design review (the owner can override)
 
-- **Project board:** about 1.5 m wide and 1 m tall, centre at 1.4 m above the
-  floor, thin, with a wood frame and a corkboard-coloured face so it reads as
-  a board. It sits mid-wall on the left wall. "In reach" means within 1.5 m
+- **Project board:** modelled on the owner's real board: a brown hessian
+  pinboard about 1.5 m long and 1 m tall, centre at 1.4 m above the floor,
+  mounted flat on the pine left wall, with a few lined-paper notes and two
+  photo strips as small coloured blocks pinned on it. It sits mid-wall on the left wall. "In reach" means within 1.5 m
   and within about 25 degrees of looking straight at it.
 - **Mouse lock edge cases:** opening the board releases the mouse so its close
   button and links work. Closing it (button or Esc) shows a "Click to resume"
