@@ -40,11 +40,14 @@ before, personality: it should feel like being let into the owner's room.
      blue-black office chair beside the bed end of the desk.
    - Small clutter in the photos (food, bottles, cloth, boxes, the bag on the
      bed, the lamp, the red synth) is deliberately left out.
-4. **Project board interaction.** A crosshair shows in the middle of the
-   screen. Looking at the board from close enough and pressing **E** opens the
-   existing project overlay; **Esc** closes it. While it is open, movement and
-   mouse look are paused and the mouse is released. A "Press E" prompt shows
-   only while the board is in reach.
+4. **Project board with a note per project.** The board is a pinboard on the
+   left wall, and each project in the project data file is a small paper note
+   pinned to it with the project's title on it. A crosshair shows in the middle
+   of the screen. Looking at a note from close enough highlights it and shows
+   "Press E: <title>". Pressing **E** opens a small card with the project's
+   title, description, tags and an "Open project" link (new tab). **Esc** or a
+   close button closes the card. While the card is open, movement and mouse
+   look are paused and the mouse is released.
 5. **Entry music and mute carry over unchanged.** Enter click starts the
    looping song, the Sound button mutes and remembers the choice.
 6. **Bass and guitar are visible models** in their spots but do nothing yet.
@@ -136,6 +139,24 @@ straight ahead above the bed. Plan view (not to scale):
   beyond simple lighting.
 - **The 2D code is replaced,** not kept alongside, to avoid carrying two
   engines. The pure logic (projects, mute, fallback, viewport) is reused.
+
+## Builder's calls for the notes (added when the owner chose a note per project)
+
+- **Note size and layout:** each note is about 0.28 m wide and 0.2 m tall, laid
+  out in rows on the board in the order of the project data file, with a
+  small random-looking tilt that is fixed (not random each load). The board
+  holds up to 20 notes (5 across, 4 down). Projects beyond 20 are not shown on
+  the board; a final note reads "See all projects" and links to the plain
+  project-list page.
+- **Note text:** the title is drawn onto the note with a small canvas texture,
+  the only image-like texture in the room. Long titles are shortened with an
+  ellipsis on the note; the full title is on the card.
+- **Empty list:** the board shows one blank note reading "No projects yet".
+- **Project data:** the same file as before. The card uses the existing
+  title, description, link and optional tags fields, and the same link safety
+  rules (http and https only).
+- **Card:** an HTML overlay, not 3D, reusing the existing project HTML
+  renderer where it fits.
 
 ## Builder's calls added after the design review (the owner can override)
 
