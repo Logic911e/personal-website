@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { escapeHtml, renderProjectListHtml, renderFallbackPage } from '../src/lib/projectHtml.js';
+import { escapeHtml, renderProjectListHtml, renderFallbackPage, renderProjectCardHtml } from '../src/lib/projectHtml.js';
 
 const project = (over = {}) => ({
   title: 'Chess',
@@ -52,5 +52,34 @@ describe('renderFallbackPage', () => {
 
   it('links back to the room with the override that stops the small-screen redirect', () => {
     expect(renderFallbackPage([])).toContain('href="./?game=1"');
+  });
+});
+
+describe('renderProjectCardHtml', () => {
+  it('shows title, description and tags', () => {
+    const html = renderProjectCardHtml(project());
+    expect(html).toContain('Chess');
+    expect(html).toContain('Detects pieces');
+    expect(html).toContain('ml');
+  });
+
+  it('has an Open project link that opens safely in a new tab', () => {
+    const html = renderProjectCardHtml(project());
+    expect(html).toContain('href="https://example.com/chess"');
+    expect(html).toContain('target="_blank"');
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).toContain('Open project');
+  });
+
+  it('shows markup in the title and description as plain text', () => {
+    const html = renderProjectCardHtml(project({ title: '<img src=x onerror=1>', description: '<script>alert(1)</script>' }));
+    expect(html).toContain('&lt;img src=x onerror=1&gt;');
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('<script');
+  });
+
+  it('renders no tags element when there are no tags', () => {
+    expect(renderProjectCardHtml(project({ tags: [] }))).not.toContain('class="tags"');
   });
 });

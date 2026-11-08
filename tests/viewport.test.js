@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { shouldUseFallback } from '../src/lib/viewport.js';
+import { shouldUseFallback, needsKeyboardMouse } from '../src/lib/viewport.js';
 
 describe('shouldUseFallback', () => {
   it('sends a narrow viewport to the fallback', () => {
@@ -20,5 +20,14 @@ describe('shouldUseFallback', () => {
 
   it('treats exactly 700px as wide enough', () => {
     expect(shouldUseFallback({ width: 700, touchOnly: false })).toBe(false);
+  });
+});
+
+describe('needsKeyboardMouse', () => {
+  it('is true only for a touch-only device forced into the game', () => {
+    expect(needsKeyboardMouse({ touchOnly: true, forceGame: true })).toBe(true);
+    expect(needsKeyboardMouse({ touchOnly: true, forceGame: false })).toBe(false);
+    expect(needsKeyboardMouse({ touchOnly: false, forceGame: true })).toBe(false);
+    expect(needsKeyboardMouse({ touchOnly: false, forceGame: false })).toBe(false);
   });
 });

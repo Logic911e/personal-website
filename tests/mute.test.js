@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { loadMuted, saveMuted } from '../src/lib/mute.js';
+import { loadMuted, saveMuted, effectiveMuted } from '../src/lib/mute.js';
 
 function fakeStorage() {
   const data = new Map();
@@ -44,5 +44,31 @@ describe('mute storage', () => {
   it('does not crash when there is no storage at all', () => {
     expect(() => saveMuted(true, null)).not.toThrow();
     expect(loadMuted(null)).toBe(false);
+  });
+});
+
+describe('effectiveMuted', () => {
+  it('is muted when the visitor muted', () => {
+    expect(effectiveMuted(true, false)).toBe(true);
+  });
+
+  it('is muted while the tab is hidden', () => {
+    expect(effectiveMuted(false, true)).toBe(true);
+  });
+
+  it('is not muted when neither applies', () => {
+    expect(effectiveMuted(false, false)).toBe(false);
+  });
+
+  it('never changes the saved mute choice', () => {
+    const s = fakeStorage();
+    saveMuted(false, s);
+    effectiveMuted(false, true); // tab hidden
+    effectiveMuted(false, false); // tab shown again
+    expect(loadMuted(s)).toBe(false);
+    saveMuted(true, s);
+    effectiveMuted(true, true);
+    effectiveMuted(true, false);
+    expect(loadMuted(s)).toBe(true);
   });
 });

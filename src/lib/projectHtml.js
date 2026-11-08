@@ -49,3 +49,18 @@ ${renderProjectListHtml(projects)}
 </html>
 `;
 }
+
+/** The card shown when a visitor uses a note on the board. */
+export function renderProjectCardHtml(p) {
+  const tags = p.tags.length
+    ? `<p class="tags">${p.tags.map((t) => `<span>${escapeHtml(t)}</span>`).join(' ')}</p>`
+    : '';
+  return (
+    `<article class="card">` +
+    `<h2>${escapeHtml(p.title)}</h2>` +
+    `<p>${escapeHtml(p.description)}</p>` +
+    tags +
+    `<p><a href="${escapeHtml(p.link)}" target="_blank" rel="noopener noreferrer">Open project</a></p>` +
+    `</article>`
+  );
+}
