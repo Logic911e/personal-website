@@ -1,18 +1,38 @@
 import * as THREE from 'three';
+import { graphemes } from '../lib/board.js';
 
 const W = 140; // small on purpose: chunky pixel text fits the blocky look
 const H = 100;
+
+// Split a word that is wider than a line into pieces that each fit, never cutting a character in half.
+function breakWord(ctx, word, maxWidth) {
+  const pieces = [];
+  let piece = '';
+  for (const ch of graphemes(word)) {
+    if (piece && ctx.measureText(piece + ch).width > maxWidth) {
+      pieces.push(piece);
+      piece = ch;
+    } else {
+      piece += ch;
+    }
+  }
+  if (piece) pieces.push(piece);
+  return pieces;
+}
 
 function wrapLines(ctx, text, maxWidth) {
   const lines = [];
   let line = '';
   for (const word of text.split(' ')) {
-    const attempt = line ? `${line} ${word}` : word;
-    if (ctx.measureText(attempt).width <= maxWidth || !line) {
-      line = attempt;
-    } else {
-      lines.push(line);
-      line = word;
+    const parts = ctx.measureText(word).width > maxWidth ? breakWord(ctx, word, maxWidth) : [word];
+    for (const part of parts) {
+      const attempt = line ? `${line} ${part}` : part;
+      if (ctx.measureText(attempt).width <= maxWidth || !line) {
+        line = attempt;
+      } else {
+        lines.push(line);
+        line = part;
+      }
     }
   }
   if (line) lines.push(line);

@@ -40,7 +40,8 @@ export function layoutNotes(count) {
   return slots;
 }
 
-function graphemes(text) {
+/** Split text into user-perceived characters, so emoji and joined emoji stay in one piece. */
+export function graphemes(text) {
   if (typeof Intl !== 'undefined' && Intl.Segmenter) {
     return Array.from(new Intl.Segmenter().segment(text), (s) => s.segment);
   }
@@ -58,6 +59,7 @@ export function noteLabel(title, max = 18) {
 export function pickNote(hits, reach = NOTE_REACH) {
   let best = null;
   for (const hit of hits) {
+    if (typeof hit.noteIndex !== 'number') continue; // something else in the ray's path (a pin), not a note
     if (hit.distance > reach) continue;
     if (best === null || hit.distance < best.distance) best = hit;
   }

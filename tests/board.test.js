@@ -122,6 +122,15 @@ describe('pickNote', () => {
     expect(pickNote([{ distance: 1.5, noteIndex: 1 }])).toBe(1);
   });
 
+  it('ignores a hit that is not a note (such as a pin), even when it is nearer', () => {
+    const hits = [{ distance: 0.9, noteIndex: undefined }, { distance: 1.0, noteIndex: 2 }];
+    expect(pickNote(hits)).toBe(2);
+  });
+
+  it('returns null when the only hit is not a note', () => {
+    expect(pickNote([{ distance: 0.9, noteIndex: undefined }])).toBeNull();
+  });
+
   it('can return the "See all projects" index', () => {
     expect(pickNote([{ distance: 1, noteIndex: -1 }])).toBe(-1);
   });

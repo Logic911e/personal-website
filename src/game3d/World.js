@@ -234,7 +234,7 @@ export class World {
     if (!this.paused) {
       this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
       const hits = this.raycaster
-        .intersectObjects(this._noteMeshes)
+        .intersectObjects(this._noteMeshes, false) // not the pins stuck on them
         .map((h) => ({ distance: h.distance, noteIndex: h.object.userData.noteIndex }));
       next = pickNote(hits);
     }
