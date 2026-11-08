@@ -1,0 +1,19 @@
+[
+  {
+    "title": "Placeholder: Chess piece detection",
+    "description": "Replace this with a short description of the project.",
+    "link": "https://example.com/chess",
+    "tags": ["machine learning"]
+  },
+  {
+    "title": "Placeholder: Music genre classifier",
+    "description": "Replace this with a short description of the project.",
+    "link": "https://example.com/music",
+    "tags": ["audio"]
+  },
+  {
+    "title": "Placeholder: Image classifier",
+    "description": "Replace this with a short description of the project.",
+    "link": "https://example.com/images"
+  }
+]

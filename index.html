@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bedroom Portfolio</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1a1424; color: #f3e9ff; font-family: 'Courier New', monospace; }
+      #enter { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center; padding: 1rem; }
+      #enter h1 { margin: 0; font-size: 2rem; letter-spacing: 0.1em; }
+      #enter button { font: inherit; font-size: 1.25rem; padding: 0.6rem 1.8rem; background: #c9a066; color: #1a1424; border: 3px solid #f3e9ff; cursor: pointer; }
+      #enter button:focus-visible, #mute-btn:focus-visible { outline: 3px solid #8fd3ff; outline-offset: 2px; }
+      #enter a { color: #8fd3ff; }
+      #game { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; }
+      #game canvas { image-rendering: pixelated; }
+      #board-prompt { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); background: #1a1424; color: #f3e9ff; border: 2px solid #c9a066; padding: 0.4rem 0.9rem; z-index: 10; }
+      #board-panel { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10, 6, 16, 0.75); z-index: 20; }
+      #board-panel[hidden], #board-prompt[hidden] { display: none; }
+      #board-panel .panel { background: #2b2036; border: 4px solid #c9a066; width: min(34rem, 92vw); max-height: 80vh; display: flex; flex-direction: column; }
+      #board-panel header { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; border-bottom: 2px solid #c9a066; }
+      #board-panel h2 { margin: 0; font-size: 1.2rem; }
+      #board-panel .panel-close { font: inherit; background: #c9a066; color: #1a1424; border: 2px solid #f3e9ff; padding: 0.2rem 0.7rem; cursor: pointer; }
+      #board-panel .panel-body { padding: 0.5rem 1rem 1rem; overflow-y: auto; }
+      #board-panel .projects { list-style: none; padding: 0; margin: 0; }
+      #board-panel .project { margin: 1rem 0; }
+      #board-panel .project a { color: #8fd3ff; font-weight: bold; }
+      #board-panel .project p { margin: 0.25rem 0; }
+      #board-panel .tags span { font-size: 0.8rem; background: #1a1424; padding: 0.1rem 0.4rem; border: 1px solid #c9a066; }
+      #board-panel button:focus-visible, #board-panel a:focus-visible { outline: 3px solid #8fd3ff; outline-offset: 2px; }
+      #mute-btn { position: fixed; top: 0.75rem; right: 0.75rem; display: none; font: inherit; padding: 0.35rem 0.8rem; background: #1a1424; color: #f3e9ff; border: 2px solid #f3e9ff; cursor: pointer; z-index: 10; }
+    </style>
+  </head>
+  <body>
+    <main id="enter">
+      <h1>Come on in</h1>
+      <p>Wander around, check out the project board, and turn your sound on.</p>
+      <button id="enter-btn" type="button">Enter</button>
+      <a href="fallback.html">Skip the game and see the projects</a>
+    </main>
+    <div id="game"></div>
+    <button id="mute-btn" type="button" aria-pressed="false">Sound: on</button>
+    <div id="board-prompt" hidden>Press E to read the project board</div>
+    <div id="board-panel" role="dialog" aria-modal="true" aria-label="Project board" hidden>
+      <div class="panel">
+        <header>
+          <h2>Project board</h2>
+          <button class="panel-close" type="button">Close (Esc)</button>
+        </header>
+        <div class="panel-body"></div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
