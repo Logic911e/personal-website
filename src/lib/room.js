@@ -1,3 +1,5 @@
+import { overlaps, collides } from './collision.js';
+
 function findLayer(json, name) {
   return json.layers.find((l) => l.type === 'objectgroup' && l.name === name);
 }
@@ -40,14 +42,7 @@ export function parseRoom(json) {
   };
 }
 
-function overlaps(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-}
-
-/** True when `rect` overlaps any solid. Touching edges do not count. */
-export function collides(rect, solids) {
-  return solids.some((s) => overlaps(rect, s));
-}
+export { collides };
 
 function centreDistance(a, b) {
   const dx = a.x + a.w / 2 - (b.x + b.w / 2);

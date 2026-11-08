@@ -1,4 +1,4 @@
-import { collides } from './room.js';
+import { collides } from './collision.js';
 
 // A long gap between frames (for example a background tab) must not turn into
 // one giant step that jumps through a wall.
