@@ -43,7 +43,7 @@ export function renderFallbackPage(projects) {
 </head>
 <body>
 <h1>Projects</h1>
-<p><a href="./">Enter the room</a></p>
+<p><a href="./?game=1">Enter the room</a></p>
 ${renderProjectListHtml(projects)}
 </body>
 </html>

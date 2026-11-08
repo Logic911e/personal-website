@@ -14,6 +14,10 @@ describe('shouldUseFallback', () => {
     expect(shouldUseFallback({ width: 1200, touchOnly: true })).toBe(true);
   });
 
+  it('lets a visitor force the game on a narrow or touch-only screen', () => {
+    expect(shouldUseFallback({ width: 400, touchOnly: true, forceGame: true })).toBe(false);
+  });
+
   it('treats exactly 700px as wide enough', () => {
     expect(shouldUseFallback({ width: 700, touchOnly: false })).toBe(false);
   });

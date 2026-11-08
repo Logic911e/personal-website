@@ -52,6 +52,9 @@ export default class RoomScene extends Phaser.Scene {
     this.inputEnabled = enabled;
     // Also release the arrow keys so the board panel can scroll with them.
     this.input.keyboard.enabled = enabled;
+    // Forget any key held when the panel opened, so a key released while the
+    // panel is open cannot stay "down" and make the player drift afterwards.
+    if (!enabled) this.input.keyboard.resetKeys();
   }
 
   update(_time, delta) {

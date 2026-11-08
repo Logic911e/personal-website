@@ -12,7 +12,9 @@ const ROOM_W = 224; // internal resolution = the placeholder room size (14 x 22 
 const ROOM_H = 352;
 
 const touchOnly = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-if (shouldUseFallback({ width: window.innerWidth, touchOnly })) {
+const forceGame = new URLSearchParams(window.location.search).get('game') === '1';
+const redirecting = shouldUseFallback({ width: window.innerWidth, touchOnly, forceGame });
+if (redirecting) {
   window.location.replace(`${BASE}fallback.html`);
 }
 
@@ -81,10 +83,13 @@ function startGame() {
   });
 }
 
-document.getElementById('enter-btn').addEventListener('click', startGame);
-muteBtn.addEventListener('click', () => {
-  muted = !muted;
-  saveMuted(muted);
-  renderMute();
-  if (!muted && music.paused) music.play().catch(() => {});
-});
+// While a redirect to the fallback page is under way, leave the game switched off.
+if (!redirecting) {
+  document.getElementById('enter-btn').addEventListener('click', startGame);
+  muteBtn.addEventListener('click', () => {
+    muted = !muted;
+    saveMuted(muted);
+    renderMute();
+    if (!muted && music.paused) music.play().catch(() => {});
+  });
+}

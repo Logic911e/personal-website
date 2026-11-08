@@ -50,7 +50,7 @@ describe('renderFallbackPage', () => {
     expect(page).toContain('Two');
   });
 
-  it('links back to the room', () => {
-    expect(renderFallbackPage([])).toContain('href="./"');
+  it('links back to the room with the override that stops the small-screen redirect', () => {
+    expect(renderFallbackPage([])).toContain('href="./?game=1"');
   });
 });
