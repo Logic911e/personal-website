@@ -2,3 +2,4 @@ node_modules
 dist
 .superpowers
 public/fallback.html
+.DS_Store
