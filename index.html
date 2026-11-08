@@ -4,8 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bedroom Portfolio</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1a1424; color: #f3e9ff; font-family: 'Courier New', monospace; }
+      #enter { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center; padding: 1rem; }
+      #enter h1 { margin: 0; font-size: 2rem; letter-spacing: 0.1em; }
+      #enter button { font: inherit; font-size: 1.25rem; padding: 0.6rem 1.8rem; background: #c9a066; color: #1a1424; border: 3px solid #f3e9ff; cursor: pointer; }
+      #enter button:focus-visible, #mute-btn:focus-visible { outline: 3px solid #8fd3ff; outline-offset: 2px; }
+      #enter a { color: #8fd3ff; }
+      #game { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; }
+      #game canvas { image-rendering: pixelated; }
+      #mute-btn { position: fixed; top: 0.75rem; right: 0.75rem; display: none; font: inherit; padding: 0.35rem 0.8rem; background: #1a1424; color: #f3e9ff; border: 2px solid #f3e9ff; cursor: pointer; z-index: 10; }
+    </style>
   </head>
   <body>
+    <main id="enter">
+      <h1>Come on in</h1>
+      <p>Wander around, check out the project board, and turn your sound on.</p>
+      <button id="enter-btn" type="button">Enter</button>
+      <a href="fallback.html">Skip the game and see the projects</a>
+    </main>
+    <div id="game"></div>
+    <button id="mute-btn" type="button" aria-pressed="false">Sound: on</button>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

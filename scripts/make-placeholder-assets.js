@@ -38,6 +38,62 @@ function makeWav() {
   return Buffer.concat([header, data]);
 }
 
+// ---- Placeholder tile sheet: two 16x16 floor tiles side by side (32x16 PNG) ----
+import { deflateSync } from 'node:zlib';
+
+function crc32(buf) {
+  let c;
+  let crc = 0xffffffff;
+  for (const byte of buf) {
+    c = (crc ^ byte) & 0xff;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    crc = (crc >>> 8) ^ c;
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function chunk(type, data) {
+  const body = Buffer.concat([Buffer.from(type), data]);
+  const out = Buffer.alloc(body.length + 8);
+  out.writeUInt32BE(data.length, 0);
+  body.copy(out, 4);
+  out.writeUInt32BE(crc32(body), body.length + 4);
+  return out;
+}
+
+function makePng(width, height, pixelAt) {
+  const raw = Buffer.alloc((width * 3 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    raw[y * (width * 3 + 1)] = 0; // filter: none
+    for (let x = 0; x < width; x++) {
+      const [r, g, b] = pixelAt(x, y);
+      const i = y * (width * 3 + 1) + 1 + x * 3;
+      raw[i] = r;
+      raw[i + 1] = g;
+      raw[i + 2] = b;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // colour type: RGB
+  return Buffer.concat([
+    Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
+
+const FLOOR_A = [74, 61, 99];
+const FLOOR_B = [84, 71, 110];
+writeFileSync(
+  new URL('tiles.png', assets),
+  makePng(32, 16, (x, y) => (x < 16 ? FLOOR_A : FLOOR_B)),
+);
+console.log('wrote public/assets/tiles.png');
+
 mkdirSync(new URL('music/', assets), { recursive: true });
 writeFileSync(new URL('music/entry.wav', assets), makeWav());
 console.log('wrote public/assets/music/entry.wav');
