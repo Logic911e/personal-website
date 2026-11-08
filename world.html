@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>World test page (temporary)</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; }
+      #world { position: fixed; inset: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="world"></div>
+    <script type="module">
+      import { World } from '/src/game3d/World.js';
+      import { parseRoomLayout } from '/src/lib/roomLayout.js';
+      import { parseProjects } from '/src/lib/projects.js';
+      import roomData from '/src/data/room.json';
+      import projectsData from '/src/data/projects.json';
+
+      const world = new World(document.getElementById('world'), parseRoomLayout(roomData), parseProjects(projectsData));
+      world.start();
+      window.__world = world; // for checking from the browser console
+    </script>
+  </body>
+</html>
