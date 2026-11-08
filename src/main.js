@@ -3,6 +3,9 @@ import RoomScene from './game/RoomScene.js';
 import { shouldUseFallback } from './lib/viewport.js';
 import { loadMuted, saveMuted } from './lib/mute.js';
 import { MUSIC_URL } from './config.js';
+import { parseProjects } from './lib/projects.js';
+import { createBoardPanel } from './ui/boardPanel.js';
+import projectsData from './data/projects.json';
 
 const BASE = import.meta.env.BASE_URL;
 const ROOM_W = 224; // internal resolution = the placeholder room size (14 x 22 tiles of 16px)
@@ -47,6 +50,30 @@ function startGame() {
     scene: [RoomScene],
   });
   window.addEventListener('resize', () => game.scale.setZoom(wholeNumberZoom()));
+
+  const panel = createBoardPanel(document.getElementById('board-panel'), parseProjects(projectsData));
+  const prompt = document.getElementById('board-prompt');
+  let nearBoard = false;
+
+  function showPrompt() {
+    prompt.hidden = !(nearBoard && !panel.isOpen());
+  }
+  function setBoardOpen(open) {
+    if (open) panel.open();
+    else panel.close();
+    game.scene.getScene('room').setInputEnabled(!open);
+    showPrompt();
+  }
+
+  game.events.on('near-board', (near) => {
+    nearBoard = near;
+    showPrompt();
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'e' || e.key === 'E') && nearBoard && !panel.isOpen()) setBoardOpen(true);
+    else if (e.key === 'Escape' && panel.isOpen()) setBoardOpen(false);
+  });
+  document.querySelector('#board-panel .panel-close').addEventListener('click', () => setBoardOpen(false));
 
   renderMute();
   music.play().catch(() => {

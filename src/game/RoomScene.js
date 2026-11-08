@@ -50,6 +50,8 @@ export default class RoomScene extends Phaser.Scene {
   /** Turn movement on or off (off while the project board is open). */
   setInputEnabled(enabled) {
     this.inputEnabled = enabled;
+    // Also release the arrow keys so the board panel can scroll with them.
+    this.input.keyboard.enabled = enabled;
   }
 
   update(_time, delta) {
@@ -67,7 +69,7 @@ export default class RoomScene extends Phaser.Scene {
     const nearBoard = near?.name === 'board';
     if (nearBoard !== this.nearBoard) {
       this.nearBoard = nearBoard;
-      this.events.emit('near-board', nearBoard);
+      this.game.events.emit('near-board', nearBoard);
     }
   }
 }
