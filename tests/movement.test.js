@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { stepPlayer } from '../src/lib/movement.js';
-import { collides } from '../src/lib/room.js';
+import { collides } from '../src/lib/collision.js';
 
 const rect = (x, y, w, h) => ({ x, y, w, h });
 

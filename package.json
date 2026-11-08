@@ -16,7 +16,6 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "phaser": "^3.90.0",
     "three": "^0.187.0"
   },
   "devDependencies": {

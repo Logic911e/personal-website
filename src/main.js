@@ -102,6 +102,7 @@ function init() {
   }
 
   function startRoom() {
+    if (world) return; // a double-click on Enter must not start a second room
     $('enter').hidden = true;
     $('world').hidden = false;
     $('crosshair').hidden = false;
