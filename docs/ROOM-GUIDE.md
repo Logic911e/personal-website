@@ -93,3 +93,15 @@ The Photos app on the desk computer shows the pictures listed in `src/data/photo
 ## The monitor
 
 The box named `monitor-screen` in `room.json` is the computer: aim at it within 1.5 m and press E to open the desktop. Keep that name, and keep the box where the crosshair can reach it from the floor in front of the desk. Its colour is a teal tint so it looks switched on.
+
+## Sprites (the bass and the guitar)
+
+Objects that need a real silhouette are drawn as pixel pictures in the `"sprites"` list of `room.json`, then turned into thin blocks. Each sprite has:
+
+- `rows`: the picture, one string per row, top row first. `.` is empty; every other character is looked up in `palette`.
+- `palette`: character → `#rrggbb` colour. Change a colour here to repaint the whole instrument.
+- `voxel`: the size of one pixel in metres (0.03 here). `depth`: how thick the picture is.
+- `origin`: where the picture's bottom, left-as-you-look-at-it corner sits.
+- `facing`: `"+x"` for something on the left wall (it faces into the room), `"-x"` for the right side.
+
+The bass (a black Fender Jazz Bass) hangs on the left wall; the guitar (a pink Squier Telecaster Deluxe) stands on its stand by the desk. Both are decoration only: they never block walking. To change an instrument, edit its rows; a typo in a row or colour is reported with the sprite's name when the room loads.
