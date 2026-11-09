@@ -1,4 +1,4 @@
-// Generates the placeholder music in public/assets/music/.
+// Generates the placeholder music in public/assets/music/ and six placeholder photos in public/assets/photos/.
 // Run with: node scripts/make-placeholder-assets.js
 // Replace the generated file with your own song; this script only exists so the
 // site has something to play before your music is ready.
@@ -41,3 +41,17 @@ function makeWav() {
 mkdirSync(new URL('music/', assets), { recursive: true });
 writeFileSync(new URL('music/entry.wav', assets), makeWav());
 console.log('wrote public/assets/music/entry.wav');
+
+// ---- Placeholder photos: six flat 4:3 pictures, to be replaced with real ones (see docs/ROOM-GUIDE.md) ----
+const COLOURS = ['#6d8fb3', '#b37a6d', '#7fa077', '#b3a46d', '#8f6db3', '#6db3aa'];
+mkdirSync(new URL('photos/', assets), { recursive: true });
+COLOURS.forEach((colour, i) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" shape-rendering="crispEdges">
+  <rect width="400" height="300" fill="${colour}"/>
+  <rect x="20" y="20" width="360" height="260" fill="none" stroke="#ffffff" stroke-width="4" stroke-dasharray="16 12"/>
+  <text x="200" y="160" text-anchor="middle" font-family="monospace" font-size="32" font-weight="bold" fill="#ffffff">Photo ${i + 1}</text>
+</svg>
+`;
+  writeFileSync(new URL(`photos/placeholder-${i + 1}.svg`, assets), svg);
+});
+console.log('wrote public/assets/photos/placeholder-1..6.svg');

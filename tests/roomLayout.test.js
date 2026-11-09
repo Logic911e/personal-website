@@ -194,3 +194,21 @@ describe('the door', () => {
     expect(names).toEqual(expect.arrayContaining(['door-frame-left', 'door-frame-right', 'door-frame-top']));
   });
 });
+
+describe('the monitor', () => {
+  it('has a teal-tinted screen so it looks switched on, and sits inside the room', () => {
+    const screen = parseRoomLayout(real).boxes.find((b) => b.name === 'monitor-screen');
+    expect(screen).toBeDefined();
+    expect(screen.color).toBe('#1f6f6f');
+    expect(screen.x + screen.w).toBeLessThanOrEqual(3.5);
+  });
+
+  it('is within reach of the floor space in front of the desk', () => {
+    const { boxes } = parseRoomLayout(real);
+    const screen = boxes.find((b) => b.name === 'monitor-screen');
+    const desk = boxes.find((b) => b.name === 'desk-body');
+    // The player's centre can get no closer to the desk than half the player's size; the screen must be reachable from there.
+    const nearestPlayerX = desk.x - 0.25;
+    expect(screen.x - nearestPlayerX).toBeLessThanOrEqual(1.5);
+  });
+});

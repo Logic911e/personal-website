@@ -1,12 +1,19 @@
+import './computer/desktop.css';
 import { World } from './game3d/World.js';
 import { parseRoomLayout } from './lib/roomLayout.js';
 import { parseProjects } from './lib/projects.js';
+import { parsePhotos } from './lib/photos.js';
+import { createDesktop } from './computer/desktop.js';
+import { createEngine } from './computer/engine.js';
+import { mountChessApp } from './computer/chessApp.js';
+import { mountPhotosApp } from './computer/photosApp.js';
 import { renderProjectCardHtml } from './lib/projectHtml.js';
 import { shouldUseFallback, needsKeyboardMouse } from './lib/viewport.js';
 import { loadMuted, saveMuted, effectiveMuted } from './lib/mute.js';
 import { MUSIC_URL } from './config.js';
 import roomData from './data/room.json';
 import projectsData from './data/projects.json';
+import photosData from './data/photos.json';
 
 const BASE = import.meta.env.BASE_URL;
 const FALLBACK = `${BASE}fallback.html`;
@@ -43,6 +50,7 @@ function init() {
   // Check the data before anything is shown, so bad data cannot leave a half-started page.
   const layout = parseRoomLayout(roomData);
   const projects = parseProjects(projectsData);
+  const photos = parsePhotos(photosData);
 
   // ---- Music and mute ----
   let userMuted = loadMuted();
@@ -69,17 +77,51 @@ function init() {
   const resume = $('resume');
   let world = null;
   let cardOpen = false;
+  let computerOpen = false;
+  let desktop = null;
   let everLocked = false;
-  let focusedIndex = null;
+  let focusedTarget = null; // a note index, 'computer', or null
 
   function updatePrompt() {
-    if (focusedIndex === null || cardOpen) {
+    if (focusedTarget === null || cardOpen || computerOpen) {
       prompt.hidden = true;
       return;
     }
-    const title = focusedIndex === -1 ? 'See all projects' : projects[focusedIndex].title;
+    const title =
+      focusedTarget === 'computer' ? 'Use the computer'
+      : focusedTarget === -1 ? 'See all projects'
+      : projects[focusedTarget].title;
     prompt.textContent = `Press E: ${title}`; // textContent, so markup in a title stays plain text
     prompt.hidden = false;
+  }
+
+  function openComputer() {
+    if (!desktop) {
+      // Created on first use. The chess engine is only asked to load when the Chess window first opens.
+      const engine = createEngine({ workerUrl: `${BASE}assets/stockfish/stockfish.wasm.js` });
+      desktop = createDesktop({
+        root: $('computer'),
+        onShutDown: closeComputer,
+        apps: [
+          { id: 'photos', title: 'Photos', icon: 'photos', size: { w: 470, h: 400 }, mount: (c) => mountPhotosApp(c, photos, { base: BASE }) },
+          { id: 'chess', title: 'Chess', icon: 'chess', size: { w: 380, h: 450 }, mount: (c) => mountChessApp(c, { engine }) },
+        ],
+      });
+    }
+    computerOpen = true; // set first: letting go of the mouse below must not show "Click to resume"
+    world.unlock();
+    world.setPaused(true);
+    desktop.open();
+    updatePrompt();
+  }
+
+  function closeComputer() {
+    if (!computerOpen) return;
+    computerOpen = false;
+    desktop.close();
+    resume.hidden = false; // browsers only allow capturing the mouse again after a click
+    resume.focus();
+    updatePrompt();
   }
 
   function openCard(index) {
@@ -110,19 +152,20 @@ function init() {
     applyAudio();
 
     world = new World($('world'), layout, projects);
-    world.onFocusNote = (index) => {
-      focusedIndex = index;
+    world.onFocusTarget = (target) => {
+      focusedTarget = target;
       updatePrompt();
     };
-    world.onActivateNote = (index) => {
-      if (index === -1) window.location.href = FALLBACK;
-      else openCard(index);
+    world.onActivateTarget = (target) => {
+      if (target === 'computer') openComputer();
+      else if (target === -1) window.location.href = FALLBACK;
+      else openCard(target);
     };
     world.onLockChange = (locked) => {
       if (locked) {
         everLocked = true;
         resume.hidden = true;
-      } else if (!cardOpen) {
+      } else if (!cardOpen && !computerOpen) {
         resume.hidden = false; // Esc, alt-tab, or any other way of losing the mouse
       }
     };
@@ -140,6 +183,8 @@ function init() {
   resume.addEventListener('click', () => world.lock());
   card.querySelector('.panel-close').addEventListener('click', closeCard);
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && cardOpen) closeCard();
+    if (e.key !== 'Escape') return;
+    if (computerOpen) closeComputer();
+    else if (cardOpen) closeCard();
   });
 }

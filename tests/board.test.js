@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { layoutNotes, noteLabel, pickNote, BOARD_W, BOARD_H } from '../src/lib/board.js';
+import { layoutNotes, noteLabel, pickNote, pickTarget, BOARD_W, BOARD_H } from '../src/lib/board.js';
 
 function overlap(a, b) {
   return (
@@ -133,5 +133,46 @@ describe('pickNote', () => {
 
   it('can return the "See all projects" index', () => {
     expect(pickNote([{ distance: 1, noteIndex: -1 }])).toBe(-1);
+  });
+});
+
+describe('pickTarget', () => {
+  it('returns null when nothing is hit', () => {
+    expect(pickTarget([])).toBeNull();
+  });
+
+  it('returns the nearest note in reach', () => {
+    expect(pickTarget([{ distance: 1.2, target: 5 }, { distance: 0.9, target: 2 }])).toBe(2);
+  });
+
+  it('returns "computer" when the monitor is the nearest thing in reach', () => {
+    expect(pickTarget([{ distance: 1.0, target: 'computer' }])).toBe('computer');
+  });
+
+  it('picks the nearer of a note and the monitor', () => {
+    expect(pickTarget([{ distance: 1.4, target: 'computer' }, { distance: 1.1, target: 3 }])).toBe(3);
+    expect(pickTarget([{ distance: 0.8, target: 'computer' }, { distance: 1.1, target: 3 }])).toBe('computer');
+  });
+
+  it('returns note 0 as 0, not as nothing', () => {
+    expect(pickTarget([{ distance: 1, target: 0 }])).toBe(0);
+  });
+
+  it('returns the "See all projects" index', () => {
+    expect(pickTarget([{ distance: 1, target: -1 }])).toBe(-1);
+  });
+
+  it('ignores a hit with no target (such as a pin), even when it is nearer', () => {
+    expect(pickTarget([{ distance: 0.5 }, { distance: 1.0, target: 2 }])).toBe(2);
+    expect(pickTarget([{ distance: 0.5, target: undefined }])).toBeNull();
+  });
+
+  it('ignores a target that is neither a note index nor the computer', () => {
+    expect(pickTarget([{ distance: 0.5, target: 'toaster' }])).toBeNull();
+  });
+
+  it('ignores anything beyond reach, but accepts exactly the reach limit', () => {
+    expect(pickTarget([{ distance: 2, target: 'computer' }])).toBeNull();
+    expect(pickTarget([{ distance: 1.5, target: 'computer' }])).toBe('computer');
   });
 });

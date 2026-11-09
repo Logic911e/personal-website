@@ -65,3 +65,17 @@ export function pickNote(hits, reach = NOTE_REACH) {
   }
   return best === null ? null : best.noteIndex;
 }
+
+/**
+ * What the crosshair is on: the nearest hit within reach that is a note (its index) or the computer monitor
+ * ("computer"). Hits with no target, such as a pin stuck in a note, are ignored. Returns null for nothing.
+ */
+export function pickTarget(hits, reach = NOTE_REACH) {
+  let best = null;
+  for (const hit of hits) {
+    if (typeof hit.target !== 'number' && hit.target !== 'computer') continue;
+    if (hit.distance > reach) continue;
+    if (best === null || hit.distance < best.distance) best = hit;
+  }
+  return best === null ? null : best.target;
+}
