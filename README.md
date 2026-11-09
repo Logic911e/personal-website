@@ -1,11 +1,12 @@
 # Bedroom Portfolio
 
-A personal website where visitors walk around a top-down pixel-art bedroom,
-hear an entry song, and open a project board that links to my projects.
-Built with Phaser 3, Vite and Tiled.
+A personal website where visitors walk around a blocky, Minecraft-style 3D copy
+of my bedroom in first person, hear an entry song, and read my projects as notes
+pinned to a board. Built with Three.js and Vite.
 
-- Design: `docs/superpowers/specs/2026-11-08-bedroom-portfolio-design.md`
-- Plan: `docs/superpowers/plans/2026-11-08-bedroom-portfolio.md`
+- Designs: `docs/superpowers/specs/`
+- Plans: `docs/superpowers/plans/`
+- How to edit the room: `docs/ROOM-GUIDE.md`
 
 ## Run it
 
@@ -16,33 +17,38 @@ npm test         # unit tests
 npm run build    # production build into dist/
 ```
 
-Controls: arrow keys or WASD to walk, **E** next to the project board to open
-it, **Esc** to close it. The Sound button top-right mutes the music.
+## Controls
 
-## Edit the projects on the board
+- Click **Enter**, then move the mouse to look and use **W A S D** or the arrow
+  keys to walk.
+- Aim the crosshair at a note on the left wall and press **E** to read it. The
+  card has an "Open project" link. **Esc** closes the card.
+- **Esc** also lets go of the mouse at any time; click "Click to resume" to
+  carry on.
+- The Sound button (top right) mutes the music. The music also mutes while the
+  tab is hidden.
 
-Edit `src/data/projects.json`. Each project needs a `title`, `description` and
-a `link` starting with `http://` or `https://`. `tags` is optional. The board
-and the plain-HTML fallback page (`fallback.html`) both come from this file.
-A bad entry stops `npm run build` with a message naming the entry.
+Phones, narrow windows and touch-only devices go to `fallback.html`, a plain
+list of the projects. Adding `?game=1` to the address forces the room on a
+narrow desktop window.
 
-## Swap in your own art, room and music
+## Edit the projects
 
-- Room map and art: see `docs/ART-CONTRACT.md`. Replace `public/assets/room.json`
-  and `public/assets/tiles.png`.
-- Music: put your file in `public/assets/music/` and change `MUSIC_URL` in
-  `src/config.js`.
-- `node scripts/make-placeholder-assets.js` regenerates the placeholder tiles
-  and tune. Do not run it after you add your own files with the same names.
+Edit `src/data/projects.json`. Each project needs a `title`, `description` and a
+`link` starting with `http://` or `https://`. `tags` is optional. The notes, the
+card and `fallback.html` all come from this file. A bad entry stops
+`npm run build` with a message naming the entry.
+
+## Change the room and music
+
+- The room is `src/data/room.json`; see `docs/ROOM-GUIDE.md`.
+- Put your song in `public/assets/music/` and change `MUSIC_URL` in
+  `src/config.js`. `node scripts/make-placeholder-assets.js` regenerates the
+  placeholder tune; do not run it after you add your own file with the same name.
 
 ## Deploy to GitHub Pages
 
 1. Push this repo to GitHub on the `main` branch.
 2. In the repo's Settings > Pages, set the source to **GitHub Actions**.
 3. The workflow in `.github/workflows/deploy.yml` tests, builds with the right
-   base path, and publishes.
-
-## Small screens
-
-Phones and windows narrower than 700px (and touch-only devices) are sent to
-`fallback.html`, the plain project list.
+   base path, and publishes. (Pages on a free account needs a public repo.)

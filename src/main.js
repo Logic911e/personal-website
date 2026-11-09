@@ -1,95 +1,145 @@
-import Phaser from 'phaser';
-import RoomScene from './game/RoomScene.js';
-import { shouldUseFallback } from './lib/viewport.js';
-import { loadMuted, saveMuted } from './lib/mute.js';
-import { MUSIC_URL } from './config.js';
+import { World } from './game3d/World.js';
+import { parseRoomLayout } from './lib/roomLayout.js';
 import { parseProjects } from './lib/projects.js';
-import { createBoardPanel } from './ui/boardPanel.js';
+import { renderProjectCardHtml } from './lib/projectHtml.js';
+import { shouldUseFallback, needsKeyboardMouse } from './lib/viewport.js';
+import { loadMuted, saveMuted, effectiveMuted } from './lib/mute.js';
+import { MUSIC_URL } from './config.js';
+import roomData from './data/room.json';
 import projectsData from './data/projects.json';
 
 const BASE = import.meta.env.BASE_URL;
-const ROOM_W = 224; // internal resolution = the placeholder room size (14 x 22 tiles of 16px)
-const ROOM_H = 352;
+const FALLBACK = `${BASE}fallback.html`;
+const $ = (id) => document.getElementById(id);
+
+function webglAvailable() {
+  try {
+    const canvas = document.createElement('canvas');
+    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
+function showMessage(text) {
+  $('message-text').textContent = text;
+  $('message').hidden = false;
+}
 
 const touchOnly = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
 const forceGame = new URLSearchParams(window.location.search).get('game') === '1';
-const redirecting = shouldUseFallback({ width: window.innerWidth, touchOnly, forceGame });
-if (redirecting) {
-  window.location.replace(`${BASE}fallback.html`);
+
+if (shouldUseFallback({ width: window.innerWidth, touchOnly, forceGame })) {
+  window.location.replace(FALLBACK); // small screens and phones get the plain list
+} else if (needsKeyboardMouse({ touchOnly, forceGame })) {
+  showMessage('This room needs a keyboard and a mouse.');
+} else if (!webglAvailable()) {
+  window.location.replace(FALLBACK); // no 3D support in this browser
+} else {
+  init();
 }
 
-const enterScreen = document.getElementById('enter');
-const gameBox = document.getElementById('game');
-const muteBtn = document.getElementById('mute-btn');
+function init() {
+  // Check the data before anything is shown, so bad data cannot leave a half-started page.
+  const layout = parseRoomLayout(roomData);
+  const projects = parseProjects(projectsData);
 
-let muted = loadMuted();
-const music = new Audio(`${BASE}${MUSIC_URL}`);
-music.loop = true;
+  // ---- Music and mute ----
+  let userMuted = loadMuted();
+  const music = new Audio(`${BASE}${MUSIC_URL}`);
+  music.loop = true;
+  const muteBtn = $('mute-btn');
 
-function renderMute() {
-  music.muted = muted;
-  muteBtn.textContent = muted ? 'Sound: off' : 'Sound: on';
-  muteBtn.setAttribute('aria-pressed', String(muted));
-}
-
-function wholeNumberZoom() {
-  return Math.max(1, Math.floor(Math.min(window.innerWidth / ROOM_W, window.innerHeight / ROOM_H)));
-}
-
-function startGame() {
-  enterScreen.style.display = 'none';
-  gameBox.style.display = 'flex';
-  muteBtn.style.display = 'block';
-
-  const game = new Phaser.Game({
-    type: Phaser.AUTO,
-    parent: gameBox,
-    width: ROOM_W,
-    height: ROOM_H,
-    pixelArt: true,
-    backgroundColor: '#1a1424',
-    scale: { mode: Phaser.Scale.NONE, zoom: wholeNumberZoom() },
-    scene: [RoomScene],
-  });
-  window.addEventListener('resize', () => game.scale.setZoom(wholeNumberZoom()));
-
-  const panel = createBoardPanel(document.getElementById('board-panel'), parseProjects(projectsData));
-  const prompt = document.getElementById('board-prompt');
-  let nearBoard = false;
-
-  function showPrompt() {
-    prompt.hidden = !(nearBoard && !panel.isOpen());
+  function applyAudio() {
+    music.muted = effectiveMuted(userMuted, document.hidden); // hiding the tab never changes the saved choice
+    muteBtn.textContent = userMuted ? 'Sound: off' : 'Sound: on';
+    muteBtn.setAttribute('aria-pressed', String(userMuted));
   }
-  function setBoardOpen(open) {
-    if (open) panel.open();
-    else panel.close();
-    game.scene.getScene('room').setInputEnabled(!open);
-    showPrompt();
-  }
-
-  game.events.on('near-board', (near) => {
-    nearBoard = near;
-    showPrompt();
-  });
-  document.addEventListener('keydown', (e) => {
-    if ((e.key === 'e' || e.key === 'E') && nearBoard && !panel.isOpen()) setBoardOpen(true);
-    else if (e.key === 'Escape' && panel.isOpen()) setBoardOpen(false);
-  });
-  document.querySelector('#board-panel .panel-close').addEventListener('click', () => setBoardOpen(false));
-
-  renderMute();
-  music.play().catch(() => {
-    // autoplay refused: the mute button still lets the visitor try again
-  });
-}
-
-// While a redirect to the fallback page is under way, leave the game switched off.
-if (!redirecting) {
-  document.getElementById('enter-btn').addEventListener('click', startGame);
   muteBtn.addEventListener('click', () => {
-    muted = !muted;
-    saveMuted(muted);
-    renderMute();
-    if (!muted && music.paused) music.play().catch(() => {});
+    userMuted = !userMuted;
+    saveMuted(userMuted);
+    applyAudio();
+    if (!userMuted && music.paused) music.play().catch(() => {});
+  });
+  document.addEventListener('visibilitychange', applyAudio);
+
+  // ---- The room ----
+  const prompt = $('note-prompt');
+  const card = $('card');
+  const resume = $('resume');
+  let world = null;
+  let cardOpen = false;
+  let everLocked = false;
+  let focusedIndex = null;
+
+  function updatePrompt() {
+    if (focusedIndex === null || cardOpen) {
+      prompt.hidden = true;
+      return;
+    }
+    const title = focusedIndex === -1 ? 'See all projects' : projects[focusedIndex].title;
+    prompt.textContent = `Press E: ${title}`; // textContent, so markup in a title stays plain text
+    prompt.hidden = false;
+  }
+
+  function openCard(index) {
+    cardOpen = true;
+    card.querySelector('.panel-body').innerHTML = renderProjectCardHtml(projects[index]);
+    card.hidden = false;
+    world.unlock(); // free the mouse so the link and button work
+    world.setPaused(true);
+    updatePrompt();
+    card.querySelector('.panel-close').focus();
+  }
+
+  function closeCard() {
+    if (!cardOpen) return;
+    cardOpen = false;
+    card.hidden = true;
+    resume.hidden = false; // browsers only allow capturing the mouse again after a click
+    resume.focus();
+    updatePrompt();
+  }
+
+  function startRoom() {
+    if (world) return; // a double-click on Enter must not start a second room
+    $('enter').hidden = true;
+    $('world').hidden = false;
+    $('crosshair').hidden = false;
+    muteBtn.hidden = false;
+    applyAudio();
+
+    world = new World($('world'), layout, projects);
+    world.onFocusNote = (index) => {
+      focusedIndex = index;
+      updatePrompt();
+    };
+    world.onActivateNote = (index) => {
+      if (index === -1) window.location.href = FALLBACK;
+      else openCard(index);
+    };
+    world.onLockChange = (locked) => {
+      if (locked) {
+        everLocked = true;
+        resume.hidden = true;
+      } else if (!cardOpen) {
+        resume.hidden = false; // Esc, alt-tab, or any other way of losing the mouse
+      }
+    };
+    world.onLockUnavailable = () => {
+      // The very first refusal means this browser will not run the room at all. After a successful
+      // lock, a refusal is usually just "too soon after Esc", so keep the resume button up instead.
+      if (!everLocked) showMessage('Your browser would not let the room capture the mouse.');
+    };
+    world.start();
+    world.lock();
+    music.play().catch(() => {});
+  }
+
+  $('enter-btn').addEventListener('click', startRoom);
+  resume.addEventListener('click', () => world.lock());
+  card.querySelector('.panel-close').addEventListener('click', closeCard);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && cardOpen) closeCard();
   });
 }

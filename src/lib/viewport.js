@@ -8,3 +8,8 @@ export function shouldUseFallback({ width, touchOnly, forceGame = false }) {
   if (forceGame) return false;
   return touchOnly || width < MOBILE_MAX_WIDTH;
 }
+
+/** A touch-only device that was forced into the game (?game=1) has no keyboard or mouse to play with. */
+export function needsKeyboardMouse({ touchOnly, forceGame }) {
+  return touchOnly && forceGame;
+}

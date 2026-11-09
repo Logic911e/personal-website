@@ -1,11 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { TILE_SIZE, MOBILE_MAX_WIDTH, MUSIC_URL, INTERACT_REACH } from '../src/config.js';
+import {
+  MOBILE_MAX_WIDTH, MUSIC_URL, PLAYER_SIZE, WALK_SPEED, EYE_HEIGHT, FOV, NOTE_REACH,
+} from '../src/config.js';
 
 describe('config', () => {
-  it('uses 16px tiles', () => {
-    expect(TILE_SIZE).toBe(16);
-  });
-
   it('sends viewports under 700px to the fallback', () => {
     expect(MOBILE_MAX_WIDTH).toBe(700);
   });
@@ -14,7 +12,11 @@ describe('config', () => {
     expect(MUSIC_URL).toBe('assets/music/entry.wav');
   });
 
-  it('lets the player interact from 12px away', () => {
-    expect(INTERACT_REACH).toBe(12);
+  it('uses the first-person values from the design', () => {
+    expect(PLAYER_SIZE).toBe(0.5);
+    expect(WALK_SPEED).toBe(3);
+    expect(EYE_HEIGHT).toBe(1.6);
+    expect(FOV).toBe(75);
+    expect(NOTE_REACH).toBe(1.5);
   });
 });

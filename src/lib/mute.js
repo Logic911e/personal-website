@@ -25,3 +25,11 @@ export function saveMuted(muted, storage = defaultStorage()) {
     // private window or blocked storage: the choice just lasts for this visit
   }
 }
+
+/**
+ * Whether the music should be silent right now: the visitor muted it, or the tab is hidden.
+ * Pure on purpose: it never reads or writes the saved choice, so hiding the tab cannot overwrite it.
+ */
+export function effectiveMuted(userMuted, tabHidden) {
+  return userMuted || tabHidden;
+}
