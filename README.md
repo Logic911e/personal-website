@@ -53,6 +53,15 @@ card and `fallback.html` all come from this file. A bad entry stops
 3. The workflow in `.github/workflows/deploy.yml` tests, builds with the right
    base path, and publishes. (Pages on a free account needs a public repo.)
 
+## The computer
+
+Aim at the monitor on the desk (within about 1.5 m) and press **E** to sit down at a Windows 95-style desktop. Double-click an icon, or select it and press Enter, to open it. **Esc** or **Start → Shut Down** returns to the room.
+
+- **Photos** shows the pictures listed in `src/data/photos.json` (see `docs/ROOM-GUIDE.md`). The six placeholders come from `node scripts/make-placeholder-assets.js`.
+- **Chess** is a game against the computer (you play white; Easy, Medium or Hard). The opponent is Stockfish running in the browser, loaded only when Chess is first opened. If it cannot load, a small built-in search plays instead.
+
+Sizes (measured): the page's JavaScript is about 604 KB raw / 156 KB gzipped, including chess.js. Stockfish adds about 655 KB raw / 191 KB gzipped, downloaded only when Chess opens.
+
 ## Credits
 
 - **Stockfish** (GPL-3.0) powers the chess computer, running in the browser via stockfish.js. Files and licence are in `public/assets/stockfish/`.

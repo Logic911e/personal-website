@@ -104,7 +104,7 @@ function init() {
         onShutDown: closeComputer,
         apps: [
           { id: 'photos', title: 'Photos', icon: 'photos', size: { w: 470, h: 400 }, mount: (c) => mountPhotosApp(c, photos, { base: BASE }) },
-          { id: 'chess', title: 'Chess', icon: 'chess', size: { w: 380, h: 490 }, mount: (c) => mountChessApp(c, { engine }) },
+          { id: 'chess', title: 'Chess', icon: 'chess', size: { w: 380, h: 450 }, mount: (c) => mountChessApp(c, { engine }) },
         ],
       });
     }

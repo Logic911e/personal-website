@@ -114,7 +114,11 @@ export function createDesktop({ root, apps, onShutDown = () => {}, now = () => n
     const startY = e.clientY;
     const origin = { ...win.pos };
     const bar = e.currentTarget;
-    bar.setPointerCapture?.(e.pointerId);
+    try {
+      bar.setPointerCapture(e.pointerId); // keeps the drag going if the pointer leaves the title bar
+    } catch {
+      // not an active pointer (for example a scripted event); dragging still works while it stays over the bar
+    }
     const move = (ev) => {
       win.pos = clampWindow({ x: origin.x + ev.clientX - startX, y: origin.y + ev.clientY - startY }, win.renderedSize, viewport(), TASKBAR_H);
       win.node.style.left = `${win.pos.x}px`;
