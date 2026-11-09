@@ -1,5 +1,6 @@
 import { collides } from './collision.js';
 import { PLAYER_SIZE } from '../config.js';
+import { TEXTURE_NAMES } from './pixelTextures.js';
 
 const COLOR = /^#[0-9a-fA-F]{6}$/;
 const NUMBER_FIELDS = ['x', 'y', 'z', 'w', 'h', 'd'];
@@ -28,6 +29,12 @@ function parseBox(raw, index, size) {
   box.color = raw.color;
   if (typeof raw.solid !== 'boolean') fail(where, '"solid" must be true or false');
   box.solid = raw.solid;
+  if (raw.texture !== undefined) {
+    if (typeof raw.texture !== 'string' || !TEXTURE_NAMES.includes(raw.texture)) {
+      fail(where, `"texture" must be one of: ${TEXTURE_NAMES.join(', ')} (got ${JSON.stringify(raw.texture)})`);
+    }
+    box.texture = raw.texture;
+  }
 
   if (!MAY_BE_OUTSIDE.some((p) => name.startsWith(p))) {
     const inside =

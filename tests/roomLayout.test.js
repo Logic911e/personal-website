@@ -135,3 +135,62 @@ describe('the real room', () => {
     expect(collides(start, solids)).toBe(false);
   });
 });
+
+describe('textures', () => {
+  const byName = (name) => parseRoomLayout(real).boxes.find((b) => b.name === name);
+
+  it('keeps a known texture name on a box', () => {
+    const layout = parseRoomLayout(minimal([box({ texture: 'wood' })]));
+    expect(layout.boxes[0].texture).toBe('wood');
+  });
+
+  it('leaves a box with no texture flat-coloured', () => {
+    expect(parseRoomLayout(minimal()).boxes[0].texture).toBeUndefined();
+  });
+
+  it('rejects an unknown texture and names the box and the choices', () => {
+    expect(() => parseRoomLayout(minimal([box({ texture: 'marble' })]))).toThrow(/crate.*marble.*planks|crate.*texture/s);
+  });
+
+  it('rejects a texture that is not a string', () => {
+    expect(() => parseRoomLayout(minimal([box({ texture: 5 })]))).toThrow(/crate.*texture/);
+  });
+
+  it('textures the surfaces of the real room', () => {
+    expect(byName('floor').texture).toBe('carpet');
+    expect(byName('wall-back').texture).toBe('plaster');
+    expect(byName('ceiling').texture).toBe('plaster');
+    expect(byName('wall-door').texture).toBe('door');
+    expect(byName('bed-duvet').texture).toBe('weave');
+    expect(byName('curtain-left').texture).toBe('curtain');
+    expect(byName('desk-top').texture).toBe('wood');
+    expect(parseRoomLayout(real).boxes.filter((b) => b.name.startsWith('pine-')).every((b) => b.texture === 'planks')).toBe(true);
+  });
+});
+
+describe('the door', () => {
+  const door = () => parseRoomLayout(real).boxes.find((b) => b.name === 'wall-door');
+
+  it('is a proper doorway: at least 0.8 m wide and 2 m tall', () => {
+    expect(door().w).toBeGreaterThanOrEqual(0.8);
+    expect(door().h).toBeGreaterThanOrEqual(2);
+  });
+
+  it('is filled in on both sides and above, with no gap in the wall', () => {
+    const { boxes } = parseRoomLayout(real);
+    const d = door();
+    const left = boxes.find((b) => b.name === 'wall-door-left');
+    const right = boxes.find((b) => b.name === 'wall-door-right');
+    const top = boxes.find((b) => b.name === 'wall-door-top');
+    expect(left.x + left.w).toBeCloseTo(d.x, 9);
+    expect(right.x).toBeCloseTo(d.x + d.w, 9);
+    expect(top.x).toBeCloseTo(d.x, 9);
+    expect(top.w).toBeCloseTo(d.w, 9);
+    expect(top.y).toBeCloseTo(d.h, 9);
+  });
+
+  it('has a frame around it', () => {
+    const names = parseRoomLayout(real).boxes.map((b) => b.name);
+    expect(names).toEqual(expect.arrayContaining(['door-frame-left', 'door-frame-right', 'door-frame-top']));
+  });
+});

@@ -79,3 +79,9 @@ the board shows a single "No projects yet" note.
 
 Put your song in `public/assets/music/` and change `MUSIC_URL` in
 `src/config.js` (for example to `assets/music/entry.mp3`).
+
+## Textures
+
+Any box in `src/data/room.json` can have an optional `"texture"`: one of `planks`, `plaster`, `carpet`, `weave`, `curtain`, `wood`, `door`. The texture is a small grey pixel pattern drawn in code (`src/lib/pixelTextures.js`); the box's `color` tints it, so change the colour to change the look. A box with no `"texture"` stays a flat colour.
+
+Each texture covers a fixed real-world size (its `tileW`/`tileH` in metres), so a big wall and a small shelf get the same pixel size. To add a texture, add an entry to `TEXTURES` with a `shade(x, y)` function that returns a grey value. To use your own art instead, replace a texture's pixels with your PNG's.
