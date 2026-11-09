@@ -52,3 +52,11 @@ card and `fallback.html` all come from this file. A bad entry stops
 2. In the repo's Settings > Pages, set the source to **GitHub Actions**.
 3. The workflow in `.github/workflows/deploy.yml` tests, builds with the right
    base path, and publishes. (Pages on a free account needs a public repo.)
+
+## Credits
+
+- **Stockfish** (GPL-3.0) powers the chess computer, running in the browser via stockfish.js. Files and licence are in `public/assets/stockfish/`.
+- **chess.js** (BSD-2-Clause) provides the chess rules.
+- **three.js** (MIT) renders the room.
+
+See `THIRD-PARTY.md` for versions and sources.
