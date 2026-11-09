@@ -220,6 +220,7 @@ export function createDesktop({ root, apps, onShutDown = () => {}, now = () => n
     open() {
       open = true;
       root.hidden = false;
+      onResize(); // the screen may have changed size while it was closed
       startMenu.hidden = true;
       tick();
       clockTimer = setInterval(tick, 15000);

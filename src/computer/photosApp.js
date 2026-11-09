@@ -54,7 +54,8 @@ export function mountPhotosApp(container, photos, { base = '' } = {}) {
   container.appendChild(root);
   const controller = createPhotosController(photos);
 
-  function render() {
+  // After the page is rebuilt, put keyboard focus back where the visitor was ({ thumb: i } or { action: 'next' }).
+  function render(focus) {
     root.textContent = '';
     const s = controller.state();
     if (s.count === 0) {
@@ -67,15 +68,17 @@ export function mountPhotosApp(container, photos, { base = '' } = {}) {
         const cell = el('button', 'photo-thumb');
         cell.type = 'button';
         cell.setAttribute('aria-label', photo.caption || `Photo ${i + 1}`);
+        cell.dataset.thumb = String(i);
         cell.appendChild(pictureFor(photo, base, 'photo-img'));
         cell.appendChild(el('span', 'photo-caption', photo.caption));
         cell.addEventListener('click', () => {
           controller.open(i);
-          render();
+          render({ action: 'next' });
         });
         grid.appendChild(cell);
       });
       root.appendChild(grid);
+      if (focus?.thumb !== undefined) root.querySelector(`[data-thumb="${focus.thumb}"]`)?.focus();
       return;
     }
     const photo = photos[s.index];
@@ -83,22 +86,27 @@ export function mountPhotosApp(container, photos, { base = '' } = {}) {
     viewer.appendChild(pictureFor(photo, base, 'photo-large'));
     viewer.appendChild(el('p', 'photo-caption-large', photo.caption));
     const bar = el('div', 'photo-bar');
-    for (const [label, action] of [
-      ['Back', () => controller.back()],
-      ['Previous', () => controller.prev()],
-      ['Next', () => controller.next()],
+    for (const [label, name, action] of [
+      ['Back', 'back', () => controller.back()],
+      ['Previous', 'prev', () => controller.prev()],
+      ['Next', 'next', () => controller.next()],
     ]) {
       const button = el('button', 'win-button', label);
       button.type = 'button';
+      button.dataset.action = name;
       button.addEventListener('click', () => {
+        const from = controller.state().index;
         action();
-        render();
+        render(name === 'back' ? { thumb: from } : { action: name });
       });
       bar.appendChild(button);
     }
-    bar.appendChild(el('span', 'photo-count', `${s.index + 1} of ${s.count}`));
+    const count = el('span', 'photo-count', `${s.index + 1} of ${s.count}`);
+    count.setAttribute('aria-live', 'polite');
+    bar.appendChild(count);
     viewer.appendChild(bar);
     root.appendChild(viewer);
+    if (focus?.action) root.querySelector(`[data-action="${focus.action}"]`)?.focus();
   }
 
   render();

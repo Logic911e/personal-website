@@ -45,6 +45,11 @@ describe('parsePhotos', () => {
     expect(() => parsePhotos([{ src: '//evil.test/a.jpg' }])).toThrow(/src/);
   });
 
+  it('rejects a source with a backslash (browsers read /\\host as //host)', () => {
+    expect(() => parsePhotos([{ src: '/\\evil.test/a.jpg' }])).toThrow(/src/);
+    expect(() => parsePhotos([{ src: 'assets\\a.jpg' }])).toThrow(/src/);
+  });
+
   it('rejects a caption that is not text', () => {
     expect(() => parsePhotos([{ src: 'a.jpg', caption: 5 }])).toThrow(/caption/);
   });

@@ -8,7 +8,7 @@ function fail(where, why) {
 // an unexpected place: no javascript:, data:, or protocol-relative (//host) sources.
 function safeSrc(src) {
   if (typeof src !== 'string' || src.trim() === '') return false;
-  if (src.startsWith('//')) return false;
+  if (src.startsWith('//') || src.includes('\\')) return false;
   if (HAS_SCHEME.test(src)) return /^https?:\/\//i.test(src);
   return true;
 }
