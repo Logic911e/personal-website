@@ -7,7 +7,8 @@
 #computer .desk-icon svg { image-rendering: pixelated; }
 #computer .desk-icon.selected span, #computer .desk-icon:focus span { background: #000080; outline: 1px dotted #ffff80; }
 #computer .desk-icon:focus { outline: none; border-color: transparent; }
-#computer .desk-windows { position: absolute; inset: 0; }
+#computer .desk-windows { position: absolute; inset: 0; pointer-events: none; } /* an empty layer must not block the icons under it */
+#computer .desk-windows .win { pointer-events: auto; }
 
 #computer .win { position: absolute; display: flex; flex-direction: column; background: #c0c0c0; border: 2px solid; border-color: #fff #404040 #404040 #fff; box-shadow: inset -1px -1px #808080, inset 1px 1px #dfdfdf, 2px 2px 0 rgba(0,0,0,.35); padding: 2px; }
 #computer .win[hidden] { display: none; }
