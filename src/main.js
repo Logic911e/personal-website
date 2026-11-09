@@ -1,3 +1,4 @@
+import './computer/desktop.css';
 import { World } from './game3d/World.js';
 import { parseRoomLayout } from './lib/roomLayout.js';
 import { parseProjects } from './lib/projects.js';
