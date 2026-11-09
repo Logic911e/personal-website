@@ -4,7 +4,7 @@ import { makeNoteTexture } from './noteTexture.js';
 import { solidRects } from '../lib/roomLayout.js';
 import { stepPlayer } from '../lib/movement.js';
 import { applyLook, moveDir } from '../lib/look.js';
-import { layoutNotes, noteLabel, pickNote } from '../lib/board.js';
+import { layoutNotes, noteLabel, pickTarget } from '../lib/board.js';
 import { EYE_HEIGHT, FOV, PLAYER_SIZE, WALK_SPEED } from '../config.js';
 
 const KEY_MAP = {
@@ -22,8 +22,8 @@ export class World {
    * @param {Array} projects         parsed projects, one note each
    *
    * Callbacks to assign before start():
-   *   onLockChange(locked), onFocusNote(index | null), onActivateNote(index), onLockUnavailable()
-   * A note index is the project index, or -1 for the "See all projects" note.
+   *   onLockChange(locked), onFocusTarget(target | null), onActivateTarget(target), onLockUnavailable()
+   * A target is a note index (the project index, or -1 for the "See all projects" note) or 'computer'.
    */
   constructor(container, layout, projects) {
     this.container = container;
@@ -38,12 +38,12 @@ export class World {
     this.locked = false;
     this.focused = null;
     this.onLockChange = noop;
-    this.onFocusNote = noop;
-    this.onActivateNote = noop;
+    this.onFocusTarget = noop;
+    this.onActivateTarget = noop;
     this.onLockUnavailable = noop;
     this._frame = null;
     this._lastTime = 0;
-    this._noteMeshes = [];
+    this._targetMeshes = []; // everything the crosshair can pick: the notes and the monitor
   }
 
   start() {
@@ -56,6 +56,7 @@ export class World {
     this.scene.background = new THREE.Color('#1b1b20');
     this.scene.add(buildRoom(this.layout));
     this._buildNotes();
+    this._markMonitor();
 
     this.camera = new THREE.PerspectiveCamera(FOV, 1, 0.05, 50);
     this.camera.rotation.order = 'YXZ'; // yaw first, then pitch, so looking never rolls
@@ -160,7 +161,7 @@ export class World {
       this.keys[dir] = true;
       if (e.code.startsWith('Arrow')) e.preventDefault();
     } else if (e.code === 'KeyE' && !e.repeat && !this.paused && this.focused !== null) {
-      this.onActivateNote(this.focused);
+      this.onActivateTarget(this.focused);
     }
   }
 
@@ -217,7 +218,10 @@ export class World {
         new THREE.MeshBasicMaterial({ map: makeNoteTexture(label) }),
       );
       paper.rotation.z = slot.tilt;
-      if (slot.kind !== 'empty') paper.userData.noteIndex = slot.index;
+      if (slot.kind !== 'empty') {
+        paper.userData.target = slot.index;
+        paper.userData.highlight = { color: '#ffe28a', scale: 1.08 };
+      }
       group.add(paper);
 
       const pin = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.02), new THREE.MeshBasicMaterial({ color: '#d33a3a' }));
@@ -225,8 +229,19 @@ export class World {
       paper.add(pin);
 
       this.scene.add(group);
-      if (slot.kind !== 'empty') this._noteMeshes.push(paper);
+      if (slot.kind !== 'empty') this._targetMeshes.push(paper);
     }
+  }
+
+  // The monitor on the desk opens the computer. It gets its own material so lighting it up never tints other boxes.
+  _markMonitor() {
+    const screen = this.scene.getObjectByName('monitor-screen');
+    if (!screen) return;
+    screen.material = screen.material.clone();
+    screen.userData.target = 'computer';
+    screen.userData.base = screen.material.color.getHex();
+    screen.userData.highlight = { color: '#7fe0e0', scale: 1 };
+    this._targetMeshes.push(screen);
   }
 
   _updateFocus() {
@@ -234,17 +249,20 @@ export class World {
     if (!this.paused) {
       this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
       const hits = this.raycaster
-        .intersectObjects(this._noteMeshes, false) // not the pins stuck on them
-        .map((h) => ({ distance: h.distance, noteIndex: h.object.userData.noteIndex }));
-      next = pickNote(hits);
+        .intersectObjects(this._targetMeshes, false) // not the pins stuck on the notes
+        .map((h) => ({ distance: h.distance, target: h.object.userData.target }));
+      next = pickTarget(hits);
     }
     if (next === this.focused) return;
     this.focused = next;
-    for (const mesh of this._noteMeshes) {
-      const on = mesh.userData.noteIndex === next;
-      mesh.material.color.set(on ? '#ffe28a' : '#ffffff');
-      mesh.scale.setScalar(on ? 1.08 : 1);
+    for (const mesh of this._targetMeshes) {
+      const on = mesh.userData.target === next;
+      const { color, scale } = mesh.userData.highlight;
+      if (on) mesh.material.color.set(color);
+      else if (mesh.userData.base !== undefined) mesh.material.color.setHex(mesh.userData.base);
+      else mesh.material.color.set('#ffffff');
+      mesh.scale.setScalar(on ? scale : 1);
     }
-    this.onFocusNote(next);
+    this.onFocusTarget(next);
   }
 }

@@ -1,0 +1,26 @@
+[
+  {
+    "src": "assets/photos/placeholder-1.svg",
+    "caption": "Placeholder photo 1"
+  },
+  {
+    "src": "assets/photos/placeholder-2.svg",
+    "caption": "Placeholder photo 2"
+  },
+  {
+    "src": "assets/photos/placeholder-3.svg",
+    "caption": "Placeholder photo 3"
+  },
+  {
+    "src": "assets/photos/placeholder-4.svg",
+    "caption": "Placeholder photo 4"
+  },
+  {
+    "src": "assets/photos/placeholder-5.svg",
+    "caption": "Placeholder photo 5"
+  },
+  {
+    "src": "assets/photos/placeholder-6.svg",
+    "caption": "Placeholder photo 6"
+  }
+]
