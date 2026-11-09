@@ -89,3 +89,7 @@ Each texture covers a fixed real-world size (its `tileW`/`tileH` in metres), so 
 ## Photos on the computer
 
 The Photos app on the desk computer shows the pictures listed in `src/data/photos.json`, each with a `src` (a path under `public/`, such as `assets/photos/me.jpg`, or an `https://` address) and an optional `caption`. Put your image files in `public/assets/photos/` and list them there. The six `placeholder-N.svg` pictures come from `node scripts/make-placeholder-assets.js`; delete their entries once you add real photos.
+
+## The monitor
+
+The box named `monitor-screen` in `room.json` is the computer: aim at it within 1.5 m and press E to open the desktop. Keep that name, and keep the box where the crosshair can reach it from the floor in front of the desk. Its colour is a teal tint so it looks switched on.
