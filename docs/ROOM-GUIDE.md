@@ -85,3 +85,7 @@ Put your song in `public/assets/music/` and change `MUSIC_URL` in
 Any box in `src/data/room.json` can have an optional `"texture"`: one of `planks`, `plaster`, `carpet`, `weave`, `curtain`, `wood`, `door`. The texture is a small grey pixel pattern drawn in code (`src/lib/pixelTextures.js`); the box's `color` tints it, so change the colour to change the look. A box with no `"texture"` stays a flat colour.
 
 Each texture covers a fixed real-world size (its `tileW`/`tileH` in metres), so a big wall and a small shelf get the same pixel size. To add a texture, add an entry to `TEXTURES` with a `shade(x, y)` function that returns a grey value. To use your own art instead, replace a texture's pixels with your PNG's.
+
+## Photos on the computer
+
+The Photos app on the desk computer shows the pictures listed in `src/data/photos.json`, each with a `src` (a path under `public/`, such as `assets/photos/me.jpg`, or an `https://` address) and an optional `caption`. Put your image files in `public/assets/photos/` and list them there. The six `placeholder-N.svg` pictures come from `node scripts/make-placeholder-assets.js`; delete their entries once you add real photos.
