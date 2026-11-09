@@ -212,3 +212,97 @@ describe('the monitor', () => {
     expect(screen.x - nearestPlayerX).toBeLessThanOrEqual(1.5);
   });
 });
+
+describe('sprites in the room file', () => {
+  const sprite = (over = {}) => ({
+    name: 'toy', facing: '-x', voxel: 0.1, depth: 0.05,
+    origin: { x: 1, y: 0.5, z: 2 },
+    palette: { A: '#ff0000' },
+    rows: ['AA', 'AA'],
+    ...over,
+  });
+  const withSprites = (sprites, boxes = [box()]) => ({ ...minimal(boxes), sprites });
+
+  it('adds the blocks of every sprite to the room, not solid', () => {
+    const layout = parseRoomLayout(withSprites([sprite()]));
+    const mine = layout.boxes.filter((b) => b.name.startsWith('toy-'));
+    expect(mine.length).toBeGreaterThan(0);
+    expect(mine.every((b) => b.solid === false && b.color === '#ff0000')).toBe(true);
+  });
+
+  it('does not add anything for a room with no sprites', () => {
+    expect(parseRoomLayout(minimal()).boxes).toHaveLength(1);
+  });
+
+  it('does not make a sprite block a path (sprites never count as solid)', () => {
+    expect(solidRects(parseRoomLayout(withSprites([sprite()])))).toHaveLength(1); // only the crate
+  });
+
+  it('names the sprite when it is wrong', () => {
+    expect(() => parseRoomLayout(withSprites([sprite({ rows: ['AZ'] })]))).toThrow(/room layout.*toy.*Z/);
+  });
+
+  it('rejects sprites that are not a list', () => {
+    expect(() => parseRoomLayout(withSprites({}))).toThrow(/sprites/);
+  });
+
+  it('rejects a sprite that sticks out of the room', () => {
+    expect(() => parseRoomLayout(withSprites([sprite({ origin: { x: 3.49, y: 0.5, z: 2 } })]))).toThrow(/outside the room/);
+  });
+
+  it('rejects a sprite whose block names clash with a box', () => {
+    expect(() => parseRoomLayout(withSprites([sprite()], [box({ name: 'toy-0' })]))).toThrow(/duplicate/i);
+  });
+});
+
+describe('the bass and the guitar', () => {
+  const layout = parseRoomLayout(real);
+  const named = (prefix) => layout.boxes.filter((b) => b.name.startsWith(prefix));
+  const bounds = (boxes) => ({
+    minX: Math.min(...boxes.map((b) => b.x)), maxX: Math.max(...boxes.map((b) => b.x + b.w)),
+    minY: Math.min(...boxes.map((b) => b.y)), maxY: Math.max(...boxes.map((b) => b.y + b.h)),
+    minZ: Math.min(...boxes.map((b) => b.z)), maxZ: Math.max(...boxes.map((b) => b.z + b.d)),
+  });
+
+  it('are drawn as detailed sprites, not a few plain blocks', () => {
+    expect(named('bass-').length).toBeGreaterThan(30);
+    expect(named('guitar-').length).toBeGreaterThan(30);
+  });
+
+  it('left the old plain blocks behind', () => {
+    for (const old of ['bass-body', 'bass-neck', 'bass-head', 'guitar-body', 'guitar-neck', 'guitar-head']) {
+      expect(layout.boxes.find((b) => b.name === old), old).toBeUndefined();
+    }
+  });
+
+  it('keep the bass on the left wall, at a size that looks like a bass', () => {
+    const b = bounds(named('bass-'));
+    expect(b.minX).toBeLessThan(0.1);
+    expect(b.maxX).toBeLessThan(0.25);
+    expect(b.maxY - b.minY).toBeGreaterThan(1.0);
+    expect(b.maxY - b.minY).toBeLessThan(1.3);
+    expect(b.maxY).toBeLessThanOrEqual(2.4);
+    expect(b.maxZ - b.minZ).toBeGreaterThan(0.25); // body width
+    expect(b.maxZ - b.minZ).toBeLessThan(0.45);
+  });
+
+  it('keep the guitar standing on its stand, at a size that looks like a guitar', () => {
+    const stand = layout.boxes.find((b) => b.name === 'guitar-stand');
+    expect(stand.solid).toBe(true);
+    const g = bounds(named('guitar-').filter((b) => b.name !== 'guitar-stand'));
+    expect(g.minY).toBeGreaterThanOrEqual(stand.y + stand.h - 1e-6);
+    expect(g.maxY - g.minY).toBeGreaterThan(0.9);
+    expect(g.maxY - g.minY).toBeLessThan(1.2);
+    expect(g.minZ).toBeGreaterThanOrEqual(stand.z - 0.1);
+    expect(g.maxZ).toBeLessThanOrEqual(stand.z + stand.d + 0.1);
+    expect(g.minX).toBeGreaterThanOrEqual(stand.x - 1e-6);
+  });
+
+  it('use the colours of the real instruments: a black bass and a pink guitar', () => {
+    const bass = named('bass-').map((b) => b.color);
+    const guitar = named('guitar-').map((b) => b.color);
+    const count = (colors, c) => colors.filter((x) => x === c).length;
+    expect(count(bass, '#1a1a1a')).toBeGreaterThan(count(bass, '#e6dcc0')); // more black body than cream guard
+    expect(guitar).toContain('#f08db4'); // pink
+  });
+});

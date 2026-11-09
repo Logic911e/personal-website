@@ -1,6 +1,7 @@
 import { collides } from './collision.js';
 import { PLAYER_SIZE } from '../config.js';
 import { TEXTURE_NAMES } from './pixelTextures.js';
+import { spriteToBoxes } from './voxelSprite.js';
 
 const COLOR = /^#[0-9a-fA-F]{6}$/;
 const NUMBER_FIELDS = ['x', 'y', 'z', 'w', 'h', 'd'];
@@ -62,8 +63,20 @@ export function parseRoomLayout(raw) {
   };
 
   if (!Array.isArray(raw.boxes)) fail('root', '"boxes" must be a list');
+  // Sprites (pixel drawings such as the guitar) become ordinary boxes, so everything else treats them alike.
+  let spriteBoxes = [];
+  if (raw.sprites !== undefined) {
+    if (!Array.isArray(raw.sprites)) fail('root', '"sprites" must be a list');
+    spriteBoxes = raw.sprites.flatMap((sprite) => {
+      try {
+        return spriteToBoxes(sprite ?? {});
+      } catch (e) {
+        return fail('sprites', e.message);
+      }
+    });
+  }
   const seen = new Set();
-  const boxes = raw.boxes.map((b, i) => {
+  const boxes = [...raw.boxes, ...spriteBoxes].map((b, i) => {
     const box = parseBox(b, i, size);
     if (seen.has(box.name)) fail(`box "${box.name}"`, 'duplicate name');
     seen.add(box.name);
