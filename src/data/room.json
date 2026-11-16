@@ -952,5 +952,25 @@
         ".RRRRRRRRRR."
       ]
     }
+  ],
+  "pictures": [
+    {
+      "name": "band",
+      "src": "assets/wall-photos/band.jpg",
+      "wall": "left",
+      "z": 4.6,
+      "y": 1.55,
+      "w": 0.72,
+      "h": 0.48
+    },
+    {
+      "name": "baby",
+      "src": "assets/wall-photos/baby.jpg",
+      "wall": "right",
+      "z": 0.9,
+      "y": 1.5,
+      "w": 0.36,
+      "h": 0.48
+    }
   ]
 }

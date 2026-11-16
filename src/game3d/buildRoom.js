@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { getTexture } from './textures.js';
 import { TEXTURES } from '../lib/pixelTextures.js';
 import { faceRepeats } from '../lib/faceRepeats.js';
+import { resolveSrc } from '../computer/photosApp.js';
 
 /**
  * Turn the room layout into Three.js objects: one block per box (flat colour, or a pixel
@@ -37,6 +38,20 @@ export function buildRoom(layout) {
     mesh.position.set(b.x + b.w / 2, b.y + b.h / 2, b.z + b.d / 2);
     mesh.name = b.name;
     group.add(mesh);
+  }
+
+  // Photos hung on the walls: a flat picture sitting inside its (already built) frame. Not interactive.
+  const loader = new THREE.TextureLoader();
+  const base = import.meta.env.BASE_URL ?? '/';
+  for (const p of layout.pictures ?? []) {
+    const texture = loader.load(resolveSrc(p.src, base));
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 4;
+    const photo = new THREE.Mesh(new THREE.PlaneGeometry(p.w, p.h), new THREE.MeshBasicMaterial({ map: texture }));
+    photo.position.set(p.x, p.y, p.z);
+    photo.rotation.y = p.wall === 'left' ? Math.PI / 2 : -Math.PI / 2; // faces into the room
+    photo.name = `picture-${p.name}`;
+    group.add(photo);
   }
 
   // Flat, even light with a little direction so block faces read like Minecraft's.
