@@ -105,3 +105,22 @@ Objects that need a real silhouette are drawn as pixel pictures in the `"sprites
 - `facing`: `"+x"` for something on the left wall (it faces into the room), `"-x"` for the right side.
 
 The bass (a black Fender Jazz Bass) hangs on the left wall; the guitar (a pink Squier Telecaster Deluxe) stands on its stand by the desk. Both are decoration only: they never block walking. To change an instrument, edit its rows; a typo in a row or colour is reported with the sprite's name when the room loads.
+
+## Photos on the walls
+
+Framed photos hang on the pine walls. They are listed in the `"pictures"` list of `room.json`:
+
+```json
+{ "name": "band", "src": "assets/wall-photos/band.jpg", "wall": "left", "z": 4.6, "y": 1.55, "w": 0.72, "h": 0.48 }
+```
+
+- `wall`: `"left"` or `"right"`. `z`: where along the wall (0 at the bed end, 5.5 at the door). `y`: height of the picture's centre. `w` and `h`: the photo's size in metres, **not counting the frame** (a dark wooden frame 0.03 m wide is added around it). Keep `w` and `h` in the same proportions as the photo so it is not stretched.
+- A picture that would stick out of the room is reported by name when the room loads. Keep it clear of the pinboard, the shelf and the instruments.
+
+**Add a photo safely.** The site is public, so a photo is public. Run your original through the helper, which turns it the right way up, shrinks it to 800 px, and removes hidden data (camera, date, location):
+
+```
+python3 scripts/prepare-wall-photo.py "path/to/original.jpg" public/assets/wall-photos/name.jpg
+```
+
+Then add a `"pictures"` entry for it. Your original is never changed.

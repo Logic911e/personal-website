@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { parseRoomLayout, solidRects } from '../src/lib/roomLayout.js';
 import { collides } from '../src/lib/collision.js';
 import { stepPlayer } from '../src/lib/movement.js';
@@ -304,5 +304,141 @@ describe('the bass and the guitar', () => {
     const count = (colors, c) => colors.filter((x) => x === c).length;
     expect(count(bass, '#1a1a1a')).toBeGreaterThan(count(bass, '#e6dcc0')); // more black body than cream guard
     expect(guitar).toContain('#f08db4'); // pink
+  });
+});
+
+describe('framed pictures on the walls', () => {
+  const picture = (over = {}) => ({
+    name: 'snap', src: 'assets/wall-photos/snap.jpg', wall: 'left', z: 3, y: 1.5, w: 0.5, h: 0.4, ...over,
+  });
+  const withPictures = (pictures, boxes = [box()]) => ({ ...minimal(boxes), pictures });
+  const framesOf = (layout, name) => layout.boxes.filter((b) => b.name.startsWith(`frame-${name}-`));
+
+  it('keeps the picture and builds a four-piece frame around it, not solid', () => {
+    const layout = parseRoomLayout(withPictures([picture()]));
+    expect(layout.pictures).toHaveLength(1);
+    expect(layout.pictures[0]).toMatchObject({ name: 'snap', src: 'assets/wall-photos/snap.jpg', wall: 'left', y: 1.5, z: 3, w: 0.5, h: 0.4 });
+    const frame = framesOf(layout, 'snap');
+    expect(frame.map((b) => b.name).sort()).toEqual(['frame-snap-bottom', 'frame-snap-left', 'frame-snap-right', 'frame-snap-top']);
+    expect(frame.every((b) => b.solid === false)).toBe(true);
+  });
+
+  it('puts the frame around the photo: a 0.03 m border on every side', () => {
+    const frame = framesOf(parseRoomLayout(withPictures([picture()])), 'snap');
+    const minZ = Math.min(...frame.map((b) => b.z));
+    const maxZ = Math.max(...frame.map((b) => b.z + b.d));
+    const minY = Math.min(...frame.map((b) => b.y));
+    const maxY = Math.max(...frame.map((b) => b.y + b.h));
+    expect(minZ).toBeCloseTo(3 - 0.25 - 0.03, 6);
+    expect(maxZ).toBeCloseTo(3 + 0.25 + 0.03, 6);
+    expect(minY).toBeCloseTo(1.5 - 0.2 - 0.03, 6);
+    expect(maxY).toBeCloseTo(1.5 + 0.2 + 0.03, 6);
+  });
+
+  it('leaves the photo area itself open (no frame piece covers its middle)', () => {
+    const frame = framesOf(parseRoomLayout(withPictures([picture()])), 'snap');
+    const covers = (b, z, y) => z >= b.z && z <= b.z + b.d && y >= b.y && y <= b.y + b.h;
+    expect(frame.some((b) => covers(b, 3, 1.5))).toBe(false);
+  });
+
+  it('hangs a left-wall picture on the left wall, a right-wall picture on the right wall', () => {
+    const left = parseRoomLayout(withPictures([picture({ wall: 'left' })]));
+    const right = parseRoomLayout(withPictures([picture({ wall: 'right' })]));
+    expect(framesOf(left, 'snap').every((b) => b.x < 0.1)).toBe(true);
+    expect(framesOf(right, 'snap').every((b) => b.x > 3.3 && b.x + b.w <= 3.5 + 1e-9)).toBe(true);
+    expect(left.pictures[0].x).toBeLessThan(0.1);
+    expect(right.pictures[0].x).toBeGreaterThan(3.4);
+  });
+
+  it('has no pictures for a room that lists none', () => {
+    expect(parseRoomLayout(minimal()).pictures).toEqual([]);
+  });
+
+  it('rejects pictures that are not a list', () => {
+    expect(() => parseRoomLayout(withPictures({}))).toThrow(/pictures/);
+  });
+
+  it('rejects an unknown wall, naming the picture', () => {
+    expect(() => parseRoomLayout(withPictures([picture({ wall: 'ceiling' })]))).toThrow(/snap.*wall/);
+  });
+
+  it('rejects an unsafe or missing picture source', () => {
+    expect(() => parseRoomLayout(withPictures([picture({ src: 'javascript:alert(1)' })]))).toThrow(/snap.*src/);
+    expect(() => parseRoomLayout(withPictures([picture({ src: '' })]))).toThrow(/snap.*src/);
+    expect(() => parseRoomLayout(withPictures([picture({ src: 'a\\b.jpg' })]))).toThrow(/snap.*src/);
+  });
+
+  it('rejects missing or non-positive numbers', () => {
+    expect(() => parseRoomLayout(withPictures([picture({ w: 0 })]))).toThrow(/snap.*w/);
+    expect(() => parseRoomLayout(withPictures([picture({ h: -1 })]))).toThrow(/snap.*h/);
+    expect(() => parseRoomLayout(withPictures([picture({ z: undefined })]))).toThrow(/snap.*z/);
+    expect(() => parseRoomLayout(withPictures([picture({ y: 'high' })]))).toThrow(/snap.*y/);
+  });
+
+  it('rejects two pictures with the same name', () => {
+    expect(() => parseRoomLayout(withPictures([picture(), picture()]))).toThrow(/duplicate.*snap|snap.*duplicate/i);
+  });
+
+  it('rejects a picture whose frame would stick out of the room', () => {
+    expect(() => parseRoomLayout(withPictures([picture({ z: 0.1 })]))).toThrow(/outside the room/);
+    expect(() => parseRoomLayout(withPictures([picture({ y: 2.35 })]))).toThrow(/outside the room/);
+  });
+});
+
+describe('the real room\'s wall photos', () => {
+  const layout = parseRoomLayout(real);
+  const picture = (name) => layout.pictures.find((p) => p.name === name);
+  const overlaps3d = (a, b) =>
+    a.x < b.x + b.w - 1e-9 && b.x < a.x + a.w - 1e-9 &&
+    a.y < b.y + b.h - 1e-9 && b.y < a.y + a.h - 1e-9 &&
+    a.z < b.z + b.d - 1e-9 && b.z < a.z + a.d - 1e-9;
+
+  it('hangs the band photo on the left wall and the childhood photo on the right wall', () => {
+    expect(picture('band')).toMatchObject({ wall: 'left', src: 'assets/wall-photos/band.jpg' });
+    expect(picture('baby')).toMatchObject({ wall: 'right', src: 'assets/wall-photos/baby.jpg' });
+  });
+
+  it('gives each picture the shape of its photo (band 3:2 landscape, baby 3:4 portrait)', () => {
+    expect(picture('band').w / picture('band').h).toBeCloseTo(2048 / 1366, 1);
+    expect(picture('baby').w / picture('baby').h).toBeCloseTo(3024 / 4032, 1);
+  });
+
+  it('hangs both at a sensible height for looking at', () => {
+    for (const p of layout.pictures) {
+      expect(p.y - p.h / 2).toBeGreaterThan(1.0);
+      expect(p.y + p.h / 2).toBeLessThan(2.1);
+    }
+  });
+
+  it('has every photo file in the project', () => {
+    for (const p of layout.pictures) {
+      expect(existsSync(new URL(`../public/${p.src}`, import.meta.url)), p.src).toBe(true);
+    }
+  });
+
+  it('keeps the photos small enough for a web page (under 400 KB each)', () => {
+    for (const p of layout.pictures) {
+      expect(statSync(new URL(`../public/${p.src}`, import.meta.url)).size).toBeLessThan(400 * 1024);
+    }
+  });
+
+  it('carries no hidden camera data in the photo files', () => {
+    for (const p of layout.pictures) {
+      const bytes = readFileSync(new URL(`../public/${p.src}`, import.meta.url));
+      expect(bytes.includes(Buffer.from('Exif\0\0')), `${p.src} has EXIF`).toBe(false);
+    }
+  });
+
+  it('does not overlap the pinboard, the instruments, the furniture or each other', () => {
+    const frames = layout.boxes.filter((b) => b.name.startsWith('frame-'));
+    const others = layout.boxes.filter((b) => !/^(frame-|pine-|wall|floor|ceiling)/.test(b.name));
+    for (const f of frames) {
+      for (const o of others) expect(overlaps3d(f, o), `${f.name} overlaps ${o.name}`).toBe(false);
+    }
+    for (const a of frames) {
+      for (const b of frames) {
+        if (a !== b && a.name.split('-')[1] !== b.name.split('-')[1]) expect(overlaps3d(a, b)).toBe(false);
+      }
+    }
   });
 });

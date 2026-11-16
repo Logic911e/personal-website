@@ -2,6 +2,7 @@ import { collides } from './collision.js';
 import { PLAYER_SIZE } from '../config.js';
 import { TEXTURE_NAMES } from './pixelTextures.js';
 import { spriteToBoxes } from './voxelSprite.js';
+import { isSafeSrc } from './photos.js';
 
 const COLOR = /^#[0-9a-fA-F]{6}$/;
 const NUMBER_FIELDS = ['x', 'y', 'z', 'w', 'h', 'd'];
@@ -16,6 +17,54 @@ function fail(where, why) {
 function requireNumber(obj, field, where) {
   if (typeof obj?.[field] !== 'number' || !Number.isFinite(obj[field])) fail(where, `"${field}" must be a number`);
   return obj[field];
+}
+
+const FRAME_COLOR = '#3b2614';
+const FRAME_BORDER = 0.03; // width of the wooden frame around a photo, in metres
+const FRAME_DEPTH = 0.03; // how far the frame sticks out of the wall
+const WALL_SURFACE = 0.02; // the pine planks are 0.02 thick, so a frame hangs on that
+
+/**
+ * Pictures hung on the left or right wall. Each becomes a "pictures" entry (the photo itself, drawn by the
+ * renderer) plus four frame boxes around it, which then go through the same checks as every other box.
+ */
+function expandPictures(rawPictures, size) {
+  if (!Array.isArray(rawPictures)) fail('root', '"pictures" must be a list');
+  const names = new Set();
+  const pictures = [];
+  const boxes = [];
+  rawPictures.forEach((raw, i) => {
+    const name = typeof raw?.name === 'string' && raw.name !== '' ? raw.name : null;
+    if (name === null) fail(`picture #${i}`, '"name" must be a non-empty string');
+    const where = `picture "${name}"`;
+    if (names.has(name)) fail(where, 'duplicate name');
+    names.add(name);
+    if (raw.wall !== 'left' && raw.wall !== 'right') fail(where, '"wall" must be "left" or "right"');
+    if (!isSafeSrc(raw.src)) fail(where, '"src" must be a local path or an http(s) address');
+    const y = requireNumber(raw, 'y', where);
+    const z = requireNumber(raw, 'z', where);
+    const w = requireNumber(raw, 'w', where);
+    const h = requireNumber(raw, 'h', where);
+    if (w <= 0) fail(where, '"w" must be greater than 0');
+    if (h <= 0) fail(where, '"h" must be greater than 0');
+
+    const frameX = raw.wall === 'left' ? WALL_SURFACE : size.w - WALL_SURFACE - FRAME_DEPTH;
+    const round = (n) => Number(n.toFixed(6));
+    pictures.push({ name, src: raw.src, wall: raw.wall, x: round(frameX + FRAME_DEPTH / 2), y, z, w, h });
+
+    const b = FRAME_BORDER;
+    const piece = (side, py, pz, ph, pd) => ({
+      name: `frame-${name}-${side}`, x: round(frameX), y: round(py), z: round(pz), w: FRAME_DEPTH, h: round(ph), d: round(pd),
+      color: FRAME_COLOR, solid: false, texture: 'wood',
+    });
+    boxes.push(
+      piece('top', y + h / 2, z - w / 2 - b, b, w + 2 * b),
+      piece('bottom', y - h / 2 - b, z - w / 2 - b, b, w + 2 * b),
+      piece('left', y - h / 2, z - w / 2 - b, h, b),
+      piece('right', y - h / 2, z + w / 2, h, b),
+    );
+  });
+  return { pictures, boxes };
 }
 
 function parseBox(raw, index, size) {
@@ -75,8 +124,11 @@ export function parseRoomLayout(raw) {
       }
     });
   }
+  let pictures = [];
+  let frameBoxes = [];
+  if (raw.pictures !== undefined) ({ pictures, boxes: frameBoxes } = expandPictures(raw.pictures, size));
   const seen = new Set();
-  const boxes = [...raw.boxes, ...spriteBoxes].map((b, i) => {
+  const boxes = [...raw.boxes, ...spriteBoxes, ...frameBoxes].map((b, i) => {
     const box = parseBox(b, i, size);
     if (seen.has(box.name)) fail(`box "${box.name}"`, 'duplicate name');
     seen.add(box.name);
@@ -93,7 +145,7 @@ export function parseRoomLayout(raw) {
     h: requireNumber(raw.board, 'h', 'board'),
   };
 
-  const layout = { size, unit, spawn, boxes, board };
+  const layout = { size, unit, spawn, boxes, board, pictures };
 
   const footprint = { x: spawn.x - PLAYER_SIZE / 2, y: spawn.z - PLAYER_SIZE / 2, w: PLAYER_SIZE, h: PLAYER_SIZE };
   if (collides(footprint, solidRects(layout))) fail('spawn', 'is inside a solid box');
